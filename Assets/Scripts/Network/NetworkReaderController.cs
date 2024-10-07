@@ -47,7 +47,7 @@ namespace UnityMultiPlayer.Network
             if (handler == null)
                 throw new ArgumentNullException($"{nameof(handler)} is null");
 
-            if (!_handlers.ContainsKey(type))
+            if (!_handlers.ContainsKey(type) || _handlers[type] == null)
                 _handlers.Add(type, handler);
             else
                 throw new ArgumentException($"Already have {type} handler");
