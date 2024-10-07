@@ -1,41 +1,23 @@
+#if UNITY_EDITOR
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.XR;
 
-public enum NetworkMsgType
+public class NetworkTests : INetworkReadHandler
 {
-    movement,
-    networkEvent,
-}
+    private NetworkMsgType _type;
 
-public class NetworkEnum : MonoBehaviour
-{
-    const int _enumSize = 4;
-
-    private static void HandleMsg(List<byte> bytes)
+    public NetworkTests(NetworkMsgType type)
     {
-        List<byte> enumBytes = bytes.GetRange(0, _enumSize);
-        string msg = string.Empty;
-        if (bytes.Count > _enumSize + 1)
-        {
-            int end = bytes.Count - _enumSize;
-            if (end > 0)
-            {
-                List<byte> msgBytes = bytes.GetRange(_enumSize, end);
-                msg = Encoding.UTF8.GetString(msgBytes.ToArray()); 
-            }
-        }
-
-        int result = BitConverter.ToInt32(enumBytes.ToArray(), 0);
-
-        Debug.Log($"{(NetworkMsgType)result}: {msg}");
+        _type = type;
     }
 
-#if UNITY_EDITOR
-    [MenuItem("Dev/" + nameof(NetworkEnum) + "/" + nameof(Test))]
+    [MenuItem("Dev/" + nameof(NetworkTests) + "/" + nameof(Test))]
     public static void Test()
     {
         List<byte> bytes = new List<byte>();
@@ -49,8 +31,27 @@ public class NetworkEnum : MonoBehaviour
         bytes.AddRange(Encoding.UTF8.GetBytes(msg));
 
 
-        Debug.Log($"{msgType};{msg}");
-        HandleMsg(bytes);
+        Debug.Log($"Send: {msgType};{msg}");
+        try
+        {
+            NetworkReaderControler.Instance?.AddHandler(msgType, new NetworkTests(msgType));
+        }
+        catch (ArgumentException)
+        {
+
+        }
+        catch (Exception e)
+        {
+            throw e;
+        }
+        NetworkReaderControler.Instance?.HandleMsg(bytes);
     }
-#endif
+
+    public void HandleMsg(List<byte> bytes)
+    {
+        string msg = Encoding.UTF8.GetString(bytes.ToArray());
+        Debug.Log($"Got: {_type}: {msg}");
+    }
+
 }
+#endif
