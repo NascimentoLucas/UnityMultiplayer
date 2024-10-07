@@ -14,11 +14,11 @@ public interface INetworkReadHandler
     void HandleMsg(List<byte> msgBytes);
 }
 
-public class NetworkReaderControler : MonoBehaviour
+public class NetworkReaderController : MonoBehaviour
 {
     public const int EnumSize = 4;
 
-    public static NetworkReaderControler Instance { get; private set; }
+    public static NetworkReaderController Instance { get; private set; }
 
     Dictionary<NetworkMsgType, INetworkReadHandler> _handlers = new Dictionary<NetworkMsgType, INetworkReadHandler>();
 

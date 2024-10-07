@@ -34,7 +34,7 @@ public class NetworkTests : INetworkReadHandler
         Debug.Log($"Send: {msgType};{msg}");
         try
         {
-            NetworkReaderControler.Instance?.AddHandler(msgType, new NetworkTests(msgType));
+            NetworkReaderController.Instance?.AddHandler(msgType, new NetworkTests(msgType));
         }
         catch (ArgumentException)
         {
@@ -44,7 +44,7 @@ public class NetworkTests : INetworkReadHandler
         {
             throw e;
         }
-        NetworkReaderControler.Instance?.HandleMsg(bytes);
+        NetworkReaderController.Instance?.HandleMsg(bytes);
     }
 
     public void HandleMsg(List<byte> bytes)
