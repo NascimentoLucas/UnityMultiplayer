@@ -10,7 +10,6 @@ namespace UnityMultiPlayer.ThreadManagement
     {
         private List<Thread> _threads = new List<Thread>();
 
-        // Method to start a new thread and add it to the list
         public void StartNewThread(ThreadStart task)
         {
             Thread newThread = new Thread(task);
@@ -19,7 +18,6 @@ namespace UnityMultiPlayer.ThreadManagement
         }
 
 
-        // Called when the application quits
         private void OnApplicationQuit()
         {
             foreach (var thread in _threads)
@@ -28,7 +26,7 @@ namespace UnityMultiPlayer.ThreadManagement
                 {
                     if (thread != null && thread.IsAlive)
                     {
-                        thread.Join();
+                        thread.Abort();
                     }
                 }
                 catch (System.Exception e)
