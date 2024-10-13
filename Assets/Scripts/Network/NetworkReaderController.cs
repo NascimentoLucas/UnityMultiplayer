@@ -4,19 +4,19 @@ using UnityEngine;
 using UnityMultiPlayer.Common;
 
 
-public enum NetworkMsgType
-{
-    movement,
-    networkEvent,
-}
-
-public interface INetworkReadHandler
-{
-    void HandleMsg(List<byte> msgBytes);
-}
-
 namespace UnityMultiPlayer.Network
 {
+    public enum NetworkMsgType
+    {
+        movement,
+        networkEvent,
+    }
+
+    public interface INetworkReadHandler
+    {
+        void HandleMsg(List<byte> msgBytes);
+    }
+
     public class NetworkReaderController : UnitySingleton<NetworkReaderController>
     {
         public const int EnumSize = 4;

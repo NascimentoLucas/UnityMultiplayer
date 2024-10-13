@@ -27,7 +27,6 @@ namespace UnityMultiPlayer.Dev
         [MenuItem("Dev/" + nameof(NetworkTests) + "/" + nameof(CreateRandomSenderAndReader))]
         public static void CreateRandomSenderAndReader()
         {
-
             int eSize = System.Enum.GetValues(typeof(NetworkMsgType)).Length;
             int enumAsInt = UnityEngine.Random.Range(0, eSize);
             NetworkMsgType msgType = (NetworkMsgType)enumAsInt;
@@ -35,7 +34,7 @@ namespace UnityMultiPlayer.Dev
             {
                 NetworkTests t = new NetworkTests(msgType);
                 NetworkReaderController.Instance?.AddHandler(msgType, t);
-                ThreadController.Instance?.StartNewThread(t.SendMsg);
+                ThreadController.Instance?.StartNewThread(t.CallHandleMsg);
             }
             catch (ArgumentException arg)
             {
@@ -69,7 +68,7 @@ namespace UnityMultiPlayer.Dev
             }
         }
 
-        public void SendMsg()
+        public void CallHandleMsg()
         {
             while (true)
             {
