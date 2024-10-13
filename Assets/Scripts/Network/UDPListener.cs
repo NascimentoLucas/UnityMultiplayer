@@ -6,6 +6,8 @@ using UnityEngine;
 using System.Collections.Generic;
 using UnityMultiPlayer.ThreadManagement;
 using UnityMultiPlayer.Common;
+using TMPro;
+
 
 
 #if UNITY_EDITOR
@@ -14,33 +16,13 @@ using UnityEditor;
 
 namespace UnityMultiPlayer.Network
 {
-    public class JogadorUDP
-    {
-        public string loginUser;
-        public string dados;
-        public int Id { get; private set; } = -1;
-        public UdpClient UdpListener { get; private set; }
-        public IPEndPoint EndPoint { get; private set; }
-
-        public JogadorUDP(int id, UdpClient udpListener, IPEndPoint endPoint)
-        {
-            this.Id = id;
-            this.UdpListener = udpListener;
-            this.EndPoint = endPoint;
-        }
-
-        public void EnviaMenssagem(string dados)
-        {
-            byte[] responseData = Encoding.UTF8.GetBytes(dados);
-            UdpListener.Send(responseData, responseData.Length, EndPoint);  
-        }
-    }
-
     public class UDPListener : UnitySingleton<UDPListener>
     {
         private UdpClient _udpListener;
         private int _port;
-        private List<JogadorUDP> _jogadorList = new List<JogadorUDP>();
+        [SerializeField]
+        private TextMeshProUGUI _log;
+        private string _logString;
 
         private void Start()
         {
@@ -56,6 +38,8 @@ namespace UnityMultiPlayer.Network
 #endif
                 )
             {
+                _port = 5001;
+                _udpListener = new UdpClient(_port);
                 ThreadController.Instance.StartNewThread(StartListening);
             }
             else
@@ -63,6 +47,10 @@ namespace UnityMultiPlayer.Network
                 Destroy(gameObject);
             }
 
+        }
+        private void FixedUpdate()
+        {
+            _log.text = _logString;
         }
 
 #if UNITY_EDITOR
@@ -89,7 +77,6 @@ namespace UnityMultiPlayer.Network
             try
             {
                 Debug.Log($"Listening on port {_port}...");
-
                 while (true)
                 {
                     IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, _port);
@@ -98,8 +85,7 @@ namespace UnityMultiPlayer.Network
 
                     Debug.Log($"Received message from {endPoint}: {receivedMessage}");
 
-                    // Simulate adding a player (or handling data in a more complex way)
-                    _jogadorList.Add(new JogadorUDP(_jogadorList.Count, _udpListener, endPoint));
+                    _logString += $"{endPoint}: {receivedMessage}\n";
                 }
             }
             catch (Exception ex)

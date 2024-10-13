@@ -6,6 +6,8 @@ using UnityEngine;
 using System.Collections.Generic;
 using UnityMultiPlayer.Common;
 using UnityMultiPlayer.ThreadManagement;
+using TMPro;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -15,43 +17,46 @@ namespace UnityMultiPlayer.Network
 {
     public class JogadorTCP
     {
-        private TcpClient cliente;
+        private TcpClient _cliente;
 
-        private StreamReader reader = null;
-        private StreamWriter writer = null;
+        private StreamReader _reader = null;
+        private StreamWriter _writer = null;
+        TCPListener _listener;
 
         public string loginUser;
         public string dados;
 
         public int id { get; private set; } = -1;
 
-        public JogadorTCP(int id, TcpClient cliente)
+        public JogadorTCP(int id, TcpClient cliente, TCPListener listener)
         {
             this.id = id;
-            this.cliente = cliente;
+            this._cliente = cliente;
+            this._listener = listener;
 
-            NetworkStream stream = this.cliente.GetStream();
-            reader = new StreamReader(stream);
-            writer = new StreamWriter(stream);
+            NetworkStream stream = this._cliente.GetStream();
+            _reader = new StreamReader(stream);
+            _writer = new StreamWriter(stream);
             ThreadController.Instance.StartNewThread(Run);
         }
 
         public void EnviaMenssagem(string dados)
         {
-            writer.WriteLine(dados);
-            writer.Flush();
+            _writer.WriteLine(dados);
+            _writer.Flush();
         }
 
         public void Run()
         {
             Debug.Log($"Start id:{id}.listener");
-            string dados = reader.ReadLine();
+            string dados = _reader.ReadLine();
             while (dados != null)
             {
                 try
                 {
                     Debug.Log($"{id}: {dados}");
-                    dados = reader.ReadLine();
+                    dados = _reader.ReadLine();
+                    _listener.AddLog($"{id}: {dados}");
                 }
                 catch (Exception e)
                 {
@@ -59,7 +64,7 @@ namespace UnityMultiPlayer.Network
                     dados = null;
                 }
             }
-            cliente.Close();
+            _cliente.Close();
         }
     }
 
@@ -67,7 +72,10 @@ namespace UnityMultiPlayer.Network
     {
         private TcpListener _listener;
         private int _port;
-        private List<JogadorTCP> _jogadorList = new List<JogadorTCP>();
+        private List<JogadorTCP> _jogadorList;
+        [SerializeField]
+        private TextMeshProUGUI _log;
+        private string _logString;
 
         private void Start()
         {
@@ -83,6 +91,8 @@ namespace UnityMultiPlayer.Network
 #endif
                 )
             {
+                _port = 5000;
+                _listener = new TcpListener(IPAddress.Loopback, _port);
                 ThreadController.Instance.StartNewThread(StartListening); 
             }
             else
@@ -90,6 +100,11 @@ namespace UnityMultiPlayer.Network
                 Destroy(gameObject);
             }
 
+        }
+
+        private void FixedUpdate()
+        {
+            _log.text = _logString;
         }
 
 #if UNITY_EDITOR
@@ -115,13 +130,14 @@ namespace UnityMultiPlayer.Network
         {
             try
             {
+                _jogadorList = new List<JogadorTCP>();
                 _listener.Start();
                 Debug.Log($"Listening on port {_port}...");
 
                 while (true)
                 {
                     TcpClient client = _listener.AcceptTcpClient();
-                    _jogadorList.Add(new JogadorTCP(_jogadorList.Count, client));
+                    _jogadorList.Add(new JogadorTCP(_jogadorList.Count, client, this));
                 }
             }
             catch (Exception ex)
@@ -139,6 +155,11 @@ namespace UnityMultiPlayer.Network
         private void OnApplicationQuit()
         {
             StopListening();
+        }
+
+        internal void AddLog(string v)
+        {
+            _logString += v + "\n";
         }
     }
 
