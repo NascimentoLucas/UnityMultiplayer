@@ -13,7 +13,7 @@ using UnityEditor;
 
 namespace UnityMultiPlayer.Network
 {
-    public class Jogador
+    public class JogadorTCP
     {
         private TcpClient cliente;
 
@@ -25,7 +25,7 @@ namespace UnityMultiPlayer.Network
 
         public int id { get; private set; } = -1;
 
-        public Jogador(int id, TcpClient cliente)
+        public JogadorTCP(int id, TcpClient cliente)
         {
             this.id = id;
             this.cliente = cliente;
@@ -67,7 +67,7 @@ namespace UnityMultiPlayer.Network
     {
         private TcpListener _listener;
         private int _port;
-        private List<Jogador> _jogadorList = new List<Jogador>();
+        private List<JogadorTCP> _jogadorList = new List<JogadorTCP>();
 
         private void Start()
         {
@@ -121,7 +121,7 @@ namespace UnityMultiPlayer.Network
                 while (true)
                 {
                     TcpClient client = _listener.AcceptTcpClient();
-                    _jogadorList.Add(new Jogador(_jogadorList.Count, client));
+                    _jogadorList.Add(new JogadorTCP(_jogadorList.Count, client));
                 }
             }
             catch (Exception ex)
