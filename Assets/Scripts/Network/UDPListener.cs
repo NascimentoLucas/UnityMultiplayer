@@ -16,10 +16,38 @@ using UnityEditor;
 
 namespace UnityMultiPlayer.Network
 {
+    public class JogadorUDP
+    {
+        public string loginUser;
+        public string dados;
+        public int Id { get; private set; } = -1;
+        public UdpClient UdpListener { get; private set; }
+        public IPEndPoint EndPoint { get; private set; }
+
+        public JogadorUDP(int id, UdpClient udpListener, IPEndPoint endPoint)
+        {
+            this.Id = id;
+            this.UdpListener = udpListener;
+            this.EndPoint = endPoint;
+        }
+
+        public void EnviarMenssagem(string dados)
+        {
+            byte[] responseData = Encoding.UTF8.GetBytes(dados);
+            UdpListener.Send(responseData, responseData.Length, EndPoint);  
+        }
+
+        internal void EnviarHelloWorld(string receivedMessage)
+        {
+            EnviarMenssagem($"{Id}: {receivedMessage}");
+        }
+    }
+
     public class UDPListener : UnitySingleton<UDPListener>
     {
         private UdpClient _udpListener;
         private int _port;
+        private List<JogadorUDP> _jogadorList;
         [SerializeField]
         private TextMeshProUGUI _log;
         private string _logString;
@@ -48,6 +76,7 @@ namespace UnityMultiPlayer.Network
             }
 
         }
+
         private void FixedUpdate()
         {
             _log.text = _logString;
@@ -77,15 +106,18 @@ namespace UnityMultiPlayer.Network
             try
             {
                 Debug.Log($"Listening on port {_port}...");
+                _jogadorList = new List<JogadorUDP>();
                 while (true)
                 {
                     IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, _port);
-                    byte[] receivedData = _udpListener.Receive(ref endPoint);  // Receive data from any IP
+                    byte[] receivedData = _udpListener.Receive(ref endPoint); 
                     string receivedMessage = Encoding.UTF8.GetString(receivedData);
 
                     Debug.Log($"Received message from {endPoint}: {receivedMessage}");
 
-                    _logString += $"{endPoint}: {receivedMessage}\n";
+                    var j = new JogadorUDP(_jogadorList.Count, _udpListener, endPoint);
+                    _jogadorList.Add(j);
+                    j.EnviarHelloWorld(receivedMessage);
                 }
             }
             catch (Exception ex)

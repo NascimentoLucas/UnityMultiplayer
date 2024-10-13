@@ -49,13 +49,13 @@ namespace UnityMultiPlayer.Network
         public void Run()
         {
             Debug.Log($"Start id:{id}.listener");
-            string dados = _reader.ReadLine();
-            while (dados != null)
+            do
             {
                 try
                 {
                     Debug.Log($"{id}: {dados}");
                     dados = _reader.ReadLine();
+                    EnviaMenssagem($"{id}:{dados}");
                     _listener.AddLog($"{id}: {dados}");
                 }
                 catch (Exception e)
@@ -64,6 +64,8 @@ namespace UnityMultiPlayer.Network
                     dados = null;
                 }
             }
+            while (dados != null);
+            
             _cliente.Close();
         }
     }
