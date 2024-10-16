@@ -40,7 +40,7 @@ namespace UnityMultiPlayer.Network
             ThreadController.Instance.StartNewThread(Run);
         }
 
-        public void EnviaMenssagem(string dados)
+        public void EnviarMenssagem(string dados)
         {
             _writer.WriteLine(dados);
             _writer.Flush();
@@ -55,8 +55,7 @@ namespace UnityMultiPlayer.Network
                 {
                     Debug.Log($"{id}: {dados}");
                     dados = _reader.ReadLine();
-                    EnviaMenssagem($"{id}:{dados}");
-                    _listener.AddLog($"{id}: {dados}");
+                    _listener.ShareMsg(id, dados);
                 }
                 catch (Exception e)
                 {
@@ -65,7 +64,7 @@ namespace UnityMultiPlayer.Network
                 }
             }
             while (dados != null);
-            
+
             _cliente.Close();
         }
     }
@@ -95,7 +94,7 @@ namespace UnityMultiPlayer.Network
             {
                 _port = 5000;
                 _listener = new TcpListener(IPAddress.Loopback, _port);
-                ThreadController.Instance.StartNewThread(StartListening); 
+                ThreadController.Instance.StartNewThread(StartListening);
             }
             else
             {
@@ -159,9 +158,23 @@ namespace UnityMultiPlayer.Network
             StopListening();
         }
 
-        internal void AddLog(string v)
+        internal void ShareMsg(int id, string dados)
         {
-            _logString += v + "\n";
+            _logString += $"{id}: {dados}\n";
+
+            for (int i = 0; i < _jogadorList.Count; i++)
+            {
+                try
+                {
+                    if (id != i)
+                    {
+                        _jogadorList[i].EnviarMenssagem(dados);
+                    }
+                }
+                catch
+                {
+                }
+            }
         }
     }
 
