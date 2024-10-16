@@ -7,6 +7,10 @@ using System.Collections.Generic;
 using UnityMultiPlayer.Common;
 using UnityMultiPlayer.ThreadManagement;
 using TMPro;
+using System.Text;
+using static UnityEditor.PlayerSettings;
+
+
 
 
 #if UNITY_EDITOR
@@ -21,7 +25,8 @@ namespace UnityMultiPlayer.Network
 
         private StreamReader _reader = null;
         private StreamWriter _writer = null;
-        TCPListener _listener;
+        private TCPListener _listener;
+        private UdpClient _udp;
 
         public string loginUser;
         public string dados;
@@ -33,17 +38,29 @@ namespace UnityMultiPlayer.Network
             this.id = id;
             this._cliente = cliente;
             this._listener = listener;
+            Debug.Log($"New TCP {cliente.ExclusiveAddressUse}");
 
             NetworkStream stream = this._cliente.GetStream();
             _reader = new StreamReader(stream);
             _writer = new StreamWriter(stream);
             ThreadController.Instance.StartNewThread(Run);
+            //_udp = new UdpClient(5001);
         }
 
-        public void EnviarMenssagem(string dados)
+        public void TCPEnviarMenssagem(string dados)
         {
             _writer.WriteLine(dados);
             _writer.Flush();
+        }
+
+        public void UDPEnviarMenssagem(string dados)
+        {
+            //if (_cliente.Client.RemoteEndPoint is IPEndPoint endPoint)
+            //{
+            //    Debug.Log("Send UDP msg: " + dados);
+            //    byte[] responseData = Encoding.UTF8.GetBytes(dados);
+            //    _udp.Send(responseData, responseData.Length, endPoint);
+            //}
         }
 
         public void Run()
@@ -93,7 +110,7 @@ namespace UnityMultiPlayer.Network
                 )
             {
                 _port = 5000;
-                _listener = new TcpListener(IPAddress.Loopback, _port);
+                _listener = new TcpListener(IPAddress.Any, _port);
                 ThreadController.Instance.StartNewThread(StartListening);
             }
             else
@@ -118,7 +135,7 @@ namespace UnityMultiPlayer.Network
                 GameObject obj = new GameObject(nameof(TCPListener));
                 TCPListener tcp = obj.AddComponent<TCPListener>();
                 tcp._port = 5000;
-                tcp._listener = new TcpListener(IPAddress.Loopback, tcp._port);
+                tcp._listener = new TcpListener(IPAddress.Any, tcp._port);
             }
             catch (Exception e)
             {
@@ -137,8 +154,16 @@ namespace UnityMultiPlayer.Network
 
                 while (true)
                 {
-                    TcpClient client = _listener.AcceptTcpClient();
-                    _jogadorList.Add(new JogadorTCP(_jogadorList.Count, client, this));
+                    try
+                    {
+                        TcpClient client = _listener.AcceptTcpClient();
+                        _jogadorList.Add(new JogadorTCP(_jogadorList.Count, client, this));
+                    }
+                    catch (Exception e)
+                    {
+
+                        Debug.Log($"while Error: {e.Message}");
+                    }
                 }
             }
             catch (Exception ex)
@@ -168,8 +193,22 @@ namespace UnityMultiPlayer.Network
                 {
                     if (id != i)
                     {
-                        _jogadorList[i].EnviarMenssagem(dados);
+                        _jogadorList[i].TCPEnviarMenssagem(dados);
                     }
+                }
+                catch
+                {
+                }
+            }
+        }
+
+        internal void ShareAsUDP(string dados)
+        {
+            for (int i = 0; i < _jogadorList.Count; i++)
+            {
+                try
+                {
+                    _jogadorList[i].UDPEnviarMenssagem(dados);
                 }
                 catch
                 {
