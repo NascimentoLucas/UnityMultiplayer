@@ -26,7 +26,7 @@ namespace UnityMultiPlayer.Network
         private StreamReader _reader = null;
         private StreamWriter _writer = null;
         private TCPListener _listener;
-        private UdpClient _udp;
+        IPEndPoint _endPoint;
 
         public string loginUser;
         public string dados;
@@ -38,13 +38,13 @@ namespace UnityMultiPlayer.Network
             this.id = id;
             this._cliente = cliente;
             this._listener = listener;
-            Debug.Log($"New TCP {cliente.ExclusiveAddressUse}");
 
             NetworkStream stream = this._cliente.GetStream();
             _reader = new StreamReader(stream);
             _writer = new StreamWriter(stream);
             ThreadController.Instance.StartNewThread(Run);
-            //_udp = new UdpClient(5001);
+            _endPoint = _cliente.Client.RemoteEndPoint as IPEndPoint;
+            _endPoint.Port = 5001;
         }
 
         public void TCPEnviarMenssagem(string dados)
@@ -53,14 +53,18 @@ namespace UnityMultiPlayer.Network
             _writer.Flush();
         }
 
-        public void UDPEnviarMenssagem(string dados)
+        public void UDPEnviarMenssagem(UdpClient _udp, string dados)
         {
-            //if (_cliente.Client.RemoteEndPoint is IPEndPoint endPoint)
-            //{
-            //    Debug.Log("Send UDP msg: " + dados);
-            //    byte[] responseData = Encoding.UTF8.GetBytes(dados);
-            //    _udp.Send(responseData, responseData.Length, endPoint);
-            //}
+            try
+            {
+                Debug.Log($"UDP Send {_endPoint.Address}.{_endPoint.Port}: {dados}");
+                byte[] responseData = Encoding.UTF8.GetBytes(dados);
+                _udp.Send(responseData, responseData.Length, _endPoint);
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e);
+            }
         }
 
         public void Run()
@@ -202,13 +206,13 @@ namespace UnityMultiPlayer.Network
             }
         }
 
-        internal void ShareAsUDP(string dados)
+        internal void ShareAsUDP(UdpClient udp, string dados)
         {
             for (int i = 0; i < _jogadorList.Count; i++)
             {
                 try
                 {
-                    _jogadorList[i].UDPEnviarMenssagem(dados);
+                    _jogadorList[i].UDPEnviarMenssagem(udp, dados);
                 }
                 catch
                 {

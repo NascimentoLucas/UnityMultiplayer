@@ -113,7 +113,7 @@ namespace UnityMultiPlayer.Network
                     string receivedMessage = Encoding.UTF8.GetString(receivedData);
 
                     _logString += $"{endPoint.Address}: {receivedMessage}\n";
-                    _tcp.ShareAsUDP(receivedMessage);
+                    _tcp.ShareAsUDP(_udpListener, receivedMessage);
                 }
             }
             catch (Exception ex)
