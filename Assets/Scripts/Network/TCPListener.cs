@@ -1,103 +1,32 @@
-﻿using System;
+﻿#if UNITY_EDITOR
+#define LOG
+#endif
+using System;
 using System.Net.Sockets;
 using System.Net;
-using System.IO;
 using UnityEngine;
 using System.Collections.Generic;
 using UnityMultiPlayer.Common;
 using UnityMultiPlayer.ThreadManagement;
 using TMPro;
-using System.Text;
-using static UnityEditor.PlayerSettings;
 
-
-
-
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace UnityMultiPlayer.Network
 {
-    public class JogadorTCP
-    {
-        private TcpClient _cliente;
-
-        private StreamReader _reader = null;
-        private StreamWriter _writer = null;
-        private TCPListener _listener;
-        IPEndPoint _endPoint;
-
-        public string loginUser;
-        public string dados;
-
-        public int id { get; private set; } = -1;
-
-        public JogadorTCP(int id, TcpClient cliente, TCPListener listener)
-        {
-            this.id = id;
-            this._cliente = cliente;
-            this._listener = listener;
-
-            NetworkStream stream = this._cliente.GetStream();
-            _reader = new StreamReader(stream);
-            _writer = new StreamWriter(stream);
-            ThreadController.Instance.StartNewThread(Run);
-            _endPoint = _cliente.Client.RemoteEndPoint as IPEndPoint;
-            _endPoint.Port = 5001;
-        }
-
-        public void TCPEnviarMenssagem(string dados)
-        {
-            _writer.WriteLine(dados);
-            _writer.Flush();
-        }
-
-        public void UDPEnviarMenssagem(UdpClient _udp, string dados)
-        {
-            try
-            {
-                Debug.Log($"UDP Send {_endPoint.Address}.{_endPoint.Port}: {dados}");
-                byte[] responseData = Encoding.UTF8.GetBytes(dados);
-                _udp.Send(responseData, responseData.Length, _endPoint);
-            }
-            catch (Exception e)
-            {
-                Debug.Log(e);
-            }
-        }
-
-        public void Run()
-        {
-            Debug.Log($"Start id:{id}.listener");
-            do
-            {
-                try
-                {
-                    Debug.Log($"{id}: {dados}");
-                    dados = _reader.ReadLine();
-                    _listener.ShareMsg(id, dados);
-                }
-                catch (Exception e)
-                {
-                    Debug.Log($"Erro de rede: {e}");
-                    dados = null;
-                }
-            }
-            while (dados != null);
-
-            _cliente.Close();
-        }
-    }
 
     public class TCPListener : UnitySingleton<TCPListener>
     {
-        private TcpListener _listener;
-        private int _port;
-        private List<JogadorTCP> _jogadorList;
+        public const int TCPPort = 5000;
+        public const int UDPPort = 5001;
+
+#if LOG
+        [Header("Setup")]
         [SerializeField]
         private TextMeshProUGUI _log;
         private string _logString;
+#endif
+        private TcpListener _listener;
+        private List<JogadorTCP> _jogadorList;
 
         private void Start()
         {
@@ -107,15 +36,9 @@ namespace UnityMultiPlayer.Network
             isServer = true;
 #endif
 
-            if (isServer
-#if UNITY_EDITOR
-                || true
-#endif
-                )
+            if (isServer)
             {
-                _port = 5000;
-                _listener = new TcpListener(IPAddress.Any, _port);
-                ThreadController.Instance.StartNewThread(StartListening);
+                Init();
             }
             else
             {
@@ -124,29 +47,23 @@ namespace UnityMultiPlayer.Network
 
         }
 
+#if LOG
         private void FixedUpdate()
         {
             _log.text = _logString;
         }
-
-#if UNITY_EDITOR
-        [MenuItem("Dev/" + nameof(TCPListener) + "/" + nameof(InitTCPListener))]
-        public static void InitTCPListener()
-        {
-            try
-            {
-                if (!EditorApplication.isPlaying) return;
-                GameObject obj = new GameObject(nameof(TCPListener));
-                TCPListener tcp = obj.AddComponent<TCPListener>();
-                tcp._port = 5000;
-                tcp._listener = new TcpListener(IPAddress.Any, tcp._port);
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
-        }
 #endif
+
+        private void OnApplicationQuit()
+        {
+            StopListening();
+        }
+
+        private void Init()
+        {
+            _listener = new TcpListener(IPAddress.Any, TCPPort);
+            ThreadController.Instance.StartNewThread(StartListening);
+        }
 
         public void StartListening()
         {
@@ -154,7 +71,7 @@ namespace UnityMultiPlayer.Network
             {
                 _jogadorList = new List<JogadorTCP>();
                 _listener.Start();
-                Debug.Log($"Listening on port {_port}...");
+                Debug.Log($"{nameof(TCPListener)} listening on port {TCPPort}...");
 
                 while (true)
                 {
@@ -166,30 +83,27 @@ namespace UnityMultiPlayer.Network
                     catch (Exception e)
                     {
 
-                        Debug.Log($"while Error: {e.Message}");
+                        Debug.Log($"{nameof(TCPListener)} loop error: {e.Message}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Debug.Log($"Error: {ex.Message}");
+                Debug.Log($"{nameof(TCPListener)} error: {ex.Message}");
             }
         }
 
         public void StopListening()
         {
             _listener.Stop();
-            Debug.Log("Stopped listening.");
-        }
-
-        private void OnApplicationQuit()
-        {
-            StopListening();
+            Debug.Log($"{nameof(TCPListener)} stopped listening.");
         }
 
         internal void ShareMsg(int id, string dados)
         {
+#if LOG
             _logString += $"{id}: {dados}\n";
+#endif
 
             for (int i = 0; i < _jogadorList.Count; i++)
             {
@@ -200,8 +114,9 @@ namespace UnityMultiPlayer.Network
                         _jogadorList[i].TCPEnviarMenssagem(dados);
                     }
                 }
-                catch
+                catch (Exception e) 
                 {
+                    Debug.LogError($"{nameof(TCPListener)}.{nameof(ShareMsg)} err: {e} ");
                 }
             }
         }
@@ -214,8 +129,10 @@ namespace UnityMultiPlayer.Network
                 {
                     _jogadorList[i].UDPEnviarMenssagem(udp, dados);
                 }
-                catch
+                catch (Exception e)
                 {
+                    Debug.Log($"{nameof(TCPListener)}.{nameof(ShareAsUDP)} err at {i}: {e} ");
+
                 }
             }
         }
