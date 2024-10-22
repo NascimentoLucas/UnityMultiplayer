@@ -12,13 +12,18 @@ using System.Text;
 
 namespace UnityMultiPlayer.Network
 {
+    public interface IHandlerMsgReceive
+    {
+        void HandleMsg(int id, string dados);
+    }
+
     public class JogadorTCP
     {
         private TcpClient _cliente;
 
         private StreamReader _reader = null;
         private StreamWriter _writer = null;
-        private TCPListener _listener;
+        private IHandlerMsgReceive _handler;
         IPEndPoint _endPoint;
 
         public string loginUser;
@@ -26,18 +31,28 @@ namespace UnityMultiPlayer.Network
 
         public int id { get; private set; } = -1;
 
-        public JogadorTCP(int id, TcpClient cliente, TCPListener listener)
+        public JogadorTCP(int id, TcpClient cliente, IHandlerMsgReceive handler)
+        {
+            Init(id, cliente, handler);
+        }
+
+        public JogadorTCP(int id, TcpClient cliente)
+        {
+            Init(id, cliente, null);
+        }
+
+        private void Init(int id, TcpClient cliente, IHandlerMsgReceive handler = null)
         {
             this.id = id;
             this._cliente = cliente;
-            this._listener = listener;
+            this._handler = handler;
 
             NetworkStream stream = this._cliente.GetStream();
             _reader = new StreamReader(stream);
             _writer = new StreamWriter(stream);
             ThreadController.Instance.StartNewThread(Run);
             _endPoint = _cliente.Client.RemoteEndPoint as IPEndPoint;
-            _endPoint.Port = 5001;
+            _endPoint.Port = TCPListener.UDPPort;
         }
 
         public void TCPEnviarMenssagem(string dados)
@@ -51,7 +66,7 @@ namespace UnityMultiPlayer.Network
         {
             try
             {
-                Debug.Log($"{id}.UDP Send {dados}; {_endPoint.Address}.{_endPoint.Port}");
+                Debug.Log($"{id}.UDP Send {dados}; {_endPoint.Address}:{_endPoint.Port}");
                 byte[] responseData = Encoding.UTF8.GetBytes(dados);
                 _udp.Send(responseData, responseData.Length, _endPoint);
             }
@@ -70,7 +85,7 @@ namespace UnityMultiPlayer.Network
                 {
                     Debug.Log($"{id}: {dados}");
                     dados = _reader.ReadLine();
-                    _listener.ShareMsg(id, dados);
+                    _handler?.HandleMsg(id, dados);
                 }
                 catch (Exception e)
                 {

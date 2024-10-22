@@ -23,6 +23,7 @@ namespace UnityMultiPlayer.Network
 
         Dictionary<NetworkMsgType, INetworkReadHandler> _handlers = new Dictionary<NetworkMsgType, INetworkReadHandler>();
 
+
         public void HandleMsg(List<byte> bytes)
         {
             List<byte> enumBytes = bytes.GetRange(0, EnumSize);
@@ -51,6 +52,11 @@ namespace UnityMultiPlayer.Network
                 _handlers.Add(type, handler);
             else
                 throw new ArgumentException($"Already have {type} handler");
+        }
+
+        public void Connect()
+        {
+
         }
     }
 

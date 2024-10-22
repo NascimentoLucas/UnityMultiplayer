@@ -13,11 +13,14 @@ using TMPro;
 
 namespace UnityMultiPlayer.Network
 {
+    public interface IHandlerUdpMsg
+    {
+        void Handle(UdpClient udpListener, string receivedMessage);
+    }
+
     public class UDPListener : UnitySingleton<UDPListener>
     {
-        [Header("Setup")]
-        [SerializeField]
-        private TCPListener _tcp;
+        private IHandlerUdpMsg _handler;
 #if LOG
         [SerializeField]
         private TextMeshProUGUI _log;
@@ -58,6 +61,11 @@ namespace UnityMultiPlayer.Network
             StopListening();
         }
 
+        public void SetHandler(IHandlerUdpMsg handler)
+        {
+            _handler = handler; 
+        }
+
         public void StartListening()
         {
             try
@@ -72,7 +80,7 @@ namespace UnityMultiPlayer.Network
 #if LOG
                     _logString += $"{endPoint.Address}: {receivedMessage}\n"; 
 #endif
-                    _tcp.ShareAsUDP(_udpListener, receivedMessage);
+                    _handler?.Handle(_udpListener, receivedMessage);
                 }
             }
             catch (Exception ex)

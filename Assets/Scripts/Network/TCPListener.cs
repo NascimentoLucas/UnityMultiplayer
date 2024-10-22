@@ -14,11 +14,15 @@ using TMPro;
 namespace UnityMultiPlayer.Network
 {
 
-    public class TCPListener : UnitySingleton<TCPListener>
+    public class TCPListener : UnitySingleton<TCPListener>, IHandlerMsgReceive, IHandlerUdpMsg
     {
+        public const string ServerIPAddress = "192.168.0.4";
         public const int TCPPort = 5000;
         public const int UDPPort = 5001;
 
+        [Header("Setup")]
+        [SerializeField]
+        private UDPListener _udp;
 #if LOG
         [Header("Setup")]
         [SerializeField]
@@ -38,7 +42,9 @@ namespace UnityMultiPlayer.Network
 
             if (isServer)
             {
-                Init();
+                _listener = new TcpListener(IPAddress.Any, TCPPort);
+                ThreadController.Instance.StartNewThread(StartListening);
+                _udp.SetHandler(this);
             }
             else
             {
@@ -57,12 +63,6 @@ namespace UnityMultiPlayer.Network
         private void OnApplicationQuit()
         {
             StopListening();
-        }
-
-        private void Init()
-        {
-            _listener = new TcpListener(IPAddress.Any, TCPPort);
-            ThreadController.Instance.StartNewThread(StartListening);
         }
 
         public void StartListening()
@@ -99,7 +99,7 @@ namespace UnityMultiPlayer.Network
             Debug.Log($"{nameof(TCPListener)} stopped listening.");
         }
 
-        internal void ShareMsg(int id, string dados)
+        public void HandleMsg(int id, string dados)
         {
 #if LOG
             _logString += $"{id}: {dados}\n";
@@ -109,29 +109,26 @@ namespace UnityMultiPlayer.Network
             {
                 try
                 {
-                    if (id != i)
-                    {
-                        _jogadorList[i].TCPEnviarMenssagem(dados);
-                    }
+                    _jogadorList[i].TCPEnviarMenssagem(dados);
                 }
-                catch (Exception e) 
+                catch (Exception e)
                 {
-                    Debug.LogError($"{nameof(TCPListener)}.{nameof(ShareMsg)} err: {e} ");
+                    Debug.LogError($"{nameof(TCPListener)}.{nameof(HandleMsg)} err: {e} ");
                 }
             }
         }
 
-        internal void ShareAsUDP(UdpClient udp, string dados)
+        public void Handle(UdpClient udpListener, string receivedMessage)
         {
             for (int i = 0; i < _jogadorList.Count; i++)
             {
                 try
                 {
-                    _jogadorList[i].UDPEnviarMenssagem(udp, dados);
+                    _jogadorList[i].UDPEnviarMenssagem(udpListener, receivedMessage);
                 }
                 catch (Exception e)
                 {
-                    Debug.Log($"{nameof(TCPListener)}.{nameof(ShareAsUDP)} err at {i}: {e} ");
+                    Debug.Log($"{nameof(TCPListener)}.{nameof(Handle)} err at {i}: {e} ");
 
                 }
             }
