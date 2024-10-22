@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityMultiPlayer.Common;
 using UnityMultiPlayer.Network;
 
 namespace UnityMultiPlayer.Game
@@ -10,6 +11,8 @@ namespace UnityMultiPlayer.Game
     public class GameController : MonoBehaviour, INetworkReadHandler
     {
         [Header("Setup")]
+        [SerializeField]
+        private ClientConnection _client;
         [SerializeField]
         private UDPListener _udpListener;
 
@@ -39,23 +42,24 @@ namespace UnityMultiPlayer.Game
             if (_temp == null)
             {
                 _temp = Instantiate(_prefab, _father);
-                _temp.gameObject.SetActive(false);
             }
         }
 
         public void HandleMsg(NetworkMsgType type, byte[] msgBytes)
         {
             Debug.Log($"Game: {type}");
+            int index = NetworkReaderController.GetInt(msgBytes, 0);
             switch (type)
             {
                 case NetworkMsgType.PlayerConnected:
-                    int localPlayerIndex = GetInt(0);
-                    Debug.Log($"PlayerConnected: {type}.{localPlayerIndex}");
+                    Debug.Log($"PlayerConnected: {type}.{index}");
                     _players.Add(0, _temp);
                     SetupTemp();
+
+                    byte[] bytes = BytesToNewPlayer(index);
+                    _client.SendMsgTCP(bytes);
                     break;
                 case NetworkMsgType.NewPlayer:
-                    int index = GetInt(0);
                     if (!_players.ContainsKey(index))
                     {
                         _players.Add(index, _temp);
@@ -73,20 +77,11 @@ namespace UnityMultiPlayer.Game
                 default:
                     break;
             }
-
-            int GetInt(int startIndex)
+            void SetupTemp()
             {
-                return (msgBytes[startIndex]) |
-                                (msgBytes[startIndex + 1] << 8) |
-                                (msgBytes[startIndex + 2] << 16) |
-                                (msgBytes[startIndex + 3] << 24);
+                _temp.Setup(index);
+                _temp = null;
             }
-        }
-
-        private void SetupTemp()
-        {
-            _temp = null;
-            _temp.gameObject.SetActive(true);
         }
 
         internal static byte[] BytesPlayerConnected(int index)

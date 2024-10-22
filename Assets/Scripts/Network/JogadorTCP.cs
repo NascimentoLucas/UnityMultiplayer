@@ -24,7 +24,6 @@ namespace UnityMultiPlayer.Network
 
         private IHandlerMsgReceive _handler;
         IPEndPoint _endPoint;
-        private NetworkStream _stream;
 
         public string loginUser;
         public string dados;
@@ -37,16 +36,15 @@ namespace UnityMultiPlayer.Network
             this._cliente = cliente;
             this._handler = handler;
 
-            _stream = this._cliente.GetStream();
-            ThreadController.Instance.StartNewThread(Run);
             _endPoint = _cliente.Client.RemoteEndPoint as IPEndPoint;
             _endPoint.Port = TCPListener.UDPPort;
+            ThreadController.Instance.StartNewThread(Run);
         }
 
         public void TCPEnviarMenssagem(byte[] dados)
         {
-            Debug.Log($"{id}.TCP Send {dados}");
-            _stream.Write(dados, 0, dados.Length);
+            Debug.Log($"{id}.TCP Send {dados.Length}");
+            _cliente.GetStream().Write(dados, 0, dados.Length);
         }
 
         public void UDPEnviarMenssagem(UdpClient _udp, byte[] dados)
@@ -71,7 +69,7 @@ namespace UnityMultiPlayer.Network
                 try
                 {
                     Debug.Log($"{id}: {dados}");
-                    int bytesRead = _stream.Read(buffer, 0, buffer.Length);
+                    int bytesRead = _cliente.GetStream().Read(buffer, 0, buffer.Length);
                     _handler?.HandleMsg(id, buffer, bytesRead);
                 }
                 catch (Exception e)
@@ -80,9 +78,7 @@ namespace UnityMultiPlayer.Network
                     dados = null;
                 }
             }
-            while (dados != null);
-
-            _cliente.Close();
+            while (true);
         }
     }
 

@@ -1,3 +1,4 @@
+using System;
 using System.Net.Sockets;
 using UnityEngine;
 using UnityMultiPlayer.Network;
@@ -40,7 +41,7 @@ namespace UnityMultiPlayer.Common
             if (!_connected || _jogadorTCP == null) return;
 
             string msg = $"{_jogadorTCP.id}: TCP msg";
-            _jogadorTCP.TCPEnviarMenssagem(NetworkReaderController.GetMsg(NetworkMsgType.PlayerConnected, msg));
+            SendMsgTCP(NetworkReaderController.GetMsg(NetworkMsgType.PlayerConnected, msg));
         }
 
         public void SendMsgUDP()
@@ -59,6 +60,12 @@ namespace UnityMultiPlayer.Common
         public void HandleMsg(int id, byte[] dados, int length)
         {
             NetworkReaderController.Instance.HandleMsg(dados, length);
+        }
+
+        internal void SendMsgTCP(byte[] bytes)
+        {
+            if (!_connected || _jogadorTCP == null) return;
+            _jogadorTCP.TCPEnviarMenssagem(bytes);
         }
     }
 

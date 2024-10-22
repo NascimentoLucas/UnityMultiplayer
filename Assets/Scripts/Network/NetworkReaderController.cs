@@ -77,6 +77,14 @@ namespace UnityMultiPlayer.Network
             return bytes.ToArray();
         }
 
+        public static int GetInt(byte[] bytes, int index)
+        {
+            return (bytes[index]) |
+                            (bytes[index + 1] << 8) |
+                            (bytes[index + 2] << 16) |
+                            (bytes[index + 3] << 24);
+        }
+
 
 #if UNITY_EDITOR
         [MenuItem("Dev/" + nameof(NetworkReaderController) + "/" + nameof(LogTypesSize))]
