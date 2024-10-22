@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.XR;
 using UnityMultiPlayer.Common;
 
 
@@ -9,12 +12,13 @@ namespace UnityMultiPlayer.Network
     public enum NetworkMsgType
     {
         movement,
-        networkEvent,
+        PlayerConnected,
+        NewPlayer,
     }
 
     public interface INetworkReadHandler
     {
-        void HandleMsg(List<byte> msgBytes);
+        void HandleMsg(NetworkMsgType type, byte[] msgBytes);
     }
 
     public class NetworkReaderController : UnitySingleton<NetworkReaderController>
@@ -24,21 +28,23 @@ namespace UnityMultiPlayer.Network
         Dictionary<NetworkMsgType, INetworkReadHandler> _handlers = new Dictionary<NetworkMsgType, INetworkReadHandler>();
 
 
-        public void HandleMsg(List<byte> bytes)
+        public void HandleMsg(byte[] bytes, int length)
         {
-            List<byte> enumBytes = bytes.GetRange(0, EnumSize);
-            int result = BitConverter.ToInt32(enumBytes.ToArray(), 0);
+            byte[] enumBytes = new byte[EnumSize];
+            Array.Copy(bytes, enumBytes, EnumSize);
+
+            int result = BitConverter.ToInt32(enumBytes, 0);
             var type = (NetworkMsgType)result;
 
-            List<byte> msgBytes = new List<byte>();
-            int end = bytes.Count - EnumSize;
+            byte[] msgBytes = new byte[length - EnumSize];
+            int end = length - EnumSize;
             if (end > 0)
             {
-                msgBytes = bytes.GetRange(EnumSize, end);
+                Array.Copy(bytes, EnumSize, msgBytes, 0, end);
             }
 
             if (_handlers.ContainsKey(type))
-                _handlers[type].HandleMsg(msgBytes);
+                _handlers[type].HandleMsg(type, msgBytes);
             else
                 throw new NotImplementedException($"Not implemented to handle {type}");
         }
@@ -58,6 +64,28 @@ namespace UnityMultiPlayer.Network
         {
 
         }
+
+        public static byte[] GetMsg(NetworkMsgType type, string msg)
+        {
+            List<byte> bytes = new List<byte>();
+
+            int typeInt = (int)type;
+            bytes.AddRange(BitConverter.GetBytes(typeInt));
+            bytes.AddRange(Encoding.UTF8.GetBytes(msg));
+
+
+            return bytes.ToArray();
+        }
+
+
+#if UNITY_EDITOR
+        [MenuItem("Dev/" + nameof(NetworkReaderController) + "/" + nameof(LogTypesSize))]
+        public static void LogTypesSize()
+        {
+            int typeInt = (int)NetworkMsgType.movement;
+            Debug.Log(BitConverter.GetBytes(typeInt).Length);
+        }
+#endif
     }
 
 }

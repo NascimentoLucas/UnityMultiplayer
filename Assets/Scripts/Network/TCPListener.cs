@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using UnityMultiPlayer.Common;
 using UnityMultiPlayer.ThreadManagement;
 using TMPro;
+using UnityMultiPlayer.Game;
 
 
 namespace UnityMultiPlayer.Network
@@ -78,7 +79,7 @@ namespace UnityMultiPlayer.Network
                     try
                     {
                         TcpClient client = _listener.AcceptTcpClient();
-                        _jogadorList.Add(new JogadorTCP(_jogadorList.Count, client, this));
+                        AddJogador(new JogadorTCP(_jogadorList.Count, client, this));
                     }
                     catch (Exception e)
                     {
@@ -93,32 +94,22 @@ namespace UnityMultiPlayer.Network
             }
         }
 
+        private void AddJogador(JogadorTCP jog)
+        {
+            _jogadorList.Add(jog);
+            int index = _jogadorList.Count;
+            jog.TCPEnviarMenssagem(GameController.BytesPlayerConnected(index));
+            byte[] bytes = GameController.BytesToNewPlayer(index);
+            HandleMsg(index, bytes, bytes.Length);
+        }
+
         public void StopListening()
         {
             _listener.Stop();
             Debug.Log($"{nameof(TCPListener)} stopped listening.");
         }
 
-        public void HandleMsg(int id, string dados)
-        {
-#if LOG
-            _logString += $"{id}: {dados}\n";
-#endif
-
-            for (int i = 0; i < _jogadorList.Count; i++)
-            {
-                try
-                {
-                    _jogadorList[i].TCPEnviarMenssagem(dados);
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError($"{nameof(TCPListener)}.{nameof(HandleMsg)} err: {e} ");
-                }
-            }
-        }
-
-        public void Handle(UdpClient udpListener, string receivedMessage)
+        public void Handle(UdpClient udpListener, byte[] receivedMessage, int length)
         {
             for (int i = 0; i < _jogadorList.Count; i++)
             {
@@ -130,6 +121,28 @@ namespace UnityMultiPlayer.Network
                 {
                     Debug.Log($"{nameof(TCPListener)}.{nameof(Handle)} err at {i}: {e} ");
 
+                }
+            }
+        }
+
+        public void HandleMsg(int id, byte[] dados, int length)
+        {
+#if LOG
+            _logString += $"{id}: {dados}\n";
+#endif
+
+            for (int i = 0; i < _jogadorList.Count; i++)
+            {
+                try
+                {
+                    if (i != id)
+                    {
+                        _jogadorList[i].TCPEnviarMenssagem(dados);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"{nameof(TCPListener)}.{nameof(HandleMsg)} err: {e} ");
                 }
             }
         }

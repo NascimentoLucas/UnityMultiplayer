@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.Net.Sockets;
 using UnityEngine;
 using UnityMultiPlayer.Network;
@@ -7,7 +5,7 @@ using UnityMultiPlayer.ThreadManagement;
 
 namespace UnityMultiPlayer.Common
 {
-    public class ClientConnection : MonoBehaviour, IHandlerUdpMsg
+    public class ClientConnection : MonoBehaviour, IHandlerUdpMsg, IHandlerMsgReceive
     {
         const string serverIp = TCPListener.ServerIPAddress;
         const int port = TCPListener.TCPPort;
@@ -27,7 +25,7 @@ namespace UnityMultiPlayer.Common
             if (_connected) return;
             _connected = true;
             TcpClient client = new TcpClient(serverIp, port);
-            _jogadorTCP = new JogadorTCP(-10, client);
+            _jogadorTCP = new JogadorTCP(-10, client, this);
             _udp.SetHandler(this);
         }
 
@@ -41,19 +39,26 @@ namespace UnityMultiPlayer.Common
         {
             if (!_connected || _jogadorTCP == null) return;
 
-            _jogadorTCP.TCPEnviarMenssagem($"{_jogadorTCP.id}: TCP msg");
+            string msg = $"{_jogadorTCP.id}: TCP msg";
+            _jogadorTCP.TCPEnviarMenssagem(NetworkReaderController.GetMsg(NetworkMsgType.PlayerConnected, msg));
         }
 
         public void SendMsgUDP()
         {
             if (!_connected || _jogadorTCP == null) return;
 
-            _jogadorTCP.UDPEnviarMenssagem(_udp.UdpListener, $"{_jogadorTCP.id}: UDP msg");
+            string msg = $"{_jogadorTCP.id}: UDP msg";
+            _jogadorTCP.UDPEnviarMenssagem(_udp.UdpListener, NetworkReaderController.GetMsg(NetworkMsgType.PlayerConnected, msg));
         }
 
-        public void Handle(UdpClient udpListener, string receivedMessage)
+        public void Handle(UdpClient udpListener, byte[] receivedMessage, int length)
         {
-            Debug.Log($"udp: {receivedMessage}");
+            NetworkReaderController.Instance.HandleMsg(receivedMessage, length);
+        }
+
+        public void HandleMsg(int id, byte[] dados, int length)
+        {
+            NetworkReaderController.Instance.HandleMsg(dados, length);
         }
     }
 

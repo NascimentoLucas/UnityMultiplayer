@@ -8,23 +8,23 @@ using System.IO;
 using UnityEngine;
 using UnityMultiPlayer.ThreadManagement;
 using System.Text;
+using System.Runtime.InteropServices.ComTypes;
 
 
 namespace UnityMultiPlayer.Network
 {
     public interface IHandlerMsgReceive
     {
-        void HandleMsg(int id, string dados);
+        void HandleMsg(int id, byte[] dados, int length);
     }
 
     public class JogadorTCP
     {
         private TcpClient _cliente;
 
-        private StreamReader _reader = null;
-        private StreamWriter _writer = null;
         private IHandlerMsgReceive _handler;
         IPEndPoint _endPoint;
+        private NetworkStream _stream;
 
         public string loginUser;
         public string dados;
@@ -33,42 +33,28 @@ namespace UnityMultiPlayer.Network
 
         public JogadorTCP(int id, TcpClient cliente, IHandlerMsgReceive handler)
         {
-            Init(id, cliente, handler);
-        }
-
-        public JogadorTCP(int id, TcpClient cliente)
-        {
-            Init(id, cliente, null);
-        }
-
-        private void Init(int id, TcpClient cliente, IHandlerMsgReceive handler = null)
-        {
             this.id = id;
             this._cliente = cliente;
             this._handler = handler;
 
-            NetworkStream stream = this._cliente.GetStream();
-            _reader = new StreamReader(stream);
-            _writer = new StreamWriter(stream);
+            _stream = this._cliente.GetStream();
             ThreadController.Instance.StartNewThread(Run);
             _endPoint = _cliente.Client.RemoteEndPoint as IPEndPoint;
             _endPoint.Port = TCPListener.UDPPort;
         }
 
-        public void TCPEnviarMenssagem(string dados)
+        public void TCPEnviarMenssagem(byte[] dados)
         {
             Debug.Log($"{id}.TCP Send {dados}");
-            _writer.WriteLine(dados);
-            _writer.Flush();
+            _stream.Write(dados, 0, dados.Length);
         }
 
-        public void UDPEnviarMenssagem(UdpClient _udp, string dados)
+        public void UDPEnviarMenssagem(UdpClient _udp, byte[] dados)
         {
             try
             {
                 Debug.Log($"{id}.UDP Send {dados}; {_endPoint.Address}:{_endPoint.Port}");
-                byte[] responseData = Encoding.UTF8.GetBytes(dados);
-                _udp.Send(responseData, responseData.Length, _endPoint);
+                _udp.Send(dados, dados.Length, _endPoint);
             }
             catch (Exception e)
             {
@@ -79,13 +65,14 @@ namespace UnityMultiPlayer.Network
         public void Run()
         {
             Debug.Log($"Start id:{id}.listener");
+            byte[] buffer = new byte[1024]; // Create a buffer to hold the bytes
             do
             {
                 try
                 {
                     Debug.Log($"{id}: {dados}");
-                    dados = _reader.ReadLine();
-                    _handler?.HandleMsg(id, dados);
+                    int bytesRead = _stream.Read(buffer, 0, buffer.Length);
+                    _handler?.HandleMsg(id, buffer, bytesRead);
                 }
                 catch (Exception e)
                 {
