@@ -7,13 +7,18 @@ using UnityMultiPlayer.ThreadManagement;
 
 namespace UnityMultiPlayer.Common
 {
-    public class ClientConnection : MonoBehaviour
+    public class ClientConnection : MonoBehaviour, IHandlerUdpMsg
     {
         const string serverIp = TCPListener.ServerIPAddress;
         const int port = TCPListener.TCPPort;
-        private JogadorTCP _jogadorTCP;
-        //private UdpClient _udpListener = new UdpClient(TCPListener.UDPPort + 100);
 
+
+
+        [Header("Setup")]
+        [SerializeField]
+        private UDPListener _udp;
+
+        private JogadorTCP _jogadorTCP;
         private bool _connected = false;
 
 
@@ -23,6 +28,7 @@ namespace UnityMultiPlayer.Common
             _connected = true;
             TcpClient client = new TcpClient(serverIp, port);
             _jogadorTCP = new JogadorTCP(-10, client);
+            _udp.SetHandler(this);
         }
 
         public void TryConnectToServer()
@@ -42,7 +48,12 @@ namespace UnityMultiPlayer.Common
         {
             if (!_connected || _jogadorTCP == null) return;
 
-            //_jogadorTCP.UDPEnviarMenssagem(_udpListener, $"{_jogadorTCP.id}: UDP msg");
+            _jogadorTCP.UDPEnviarMenssagem(_udp.UdpListener, $"{_jogadorTCP.id}: UDP msg");
+        }
+
+        public void Handle(UdpClient udpListener, string receivedMessage)
+        {
+            Debug.Log($"udp: {receivedMessage}");
         }
     }
 

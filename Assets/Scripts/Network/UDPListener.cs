@@ -24,36 +24,27 @@ namespace UnityMultiPlayer.Network
 #if LOG
         [SerializeField]
         private TextMeshProUGUI _log;
-        private string _logString; 
+        private string _logString;
 #endif
 
         private UdpClient _udpListener;
 
+        public UdpClient UdpListener { get => _udpListener; }
+
         private void Start()
         {
-            bool isServer = false;
-
-#if UNITY_SERVER
-            isServer = true;
-#endif
-
-            if (isServer)
-            {
-                _udpListener = new UdpClient(TCPListener.UDPPort);
-                ThreadController.Instance.StartNewThread(StartListening);
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
-
+            _udpListener = new UdpClient(TCPListener.UDPPort);
+            ThreadController.Instance.StartNewThread(StartListening);
         }
 
 #if LOG
         private void FixedUpdate()
         {
-            _log.text = _logString;
-        } 
+            if (_log != null)
+            {
+                _log.text = _logString;
+            }
+        }
 #endif
 
         private void OnApplicationQuit()
@@ -63,7 +54,7 @@ namespace UnityMultiPlayer.Network
 
         public void SetHandler(IHandlerUdpMsg handler)
         {
-            _handler = handler; 
+            _handler = handler;
         }
 
         public void StartListening()
@@ -78,7 +69,7 @@ namespace UnityMultiPlayer.Network
                     string receivedMessage = Encoding.UTF8.GetString(receivedData);
 
 #if LOG
-                    _logString += $"{endPoint.Address}: {receivedMessage}\n"; 
+                    _logString += $"{endPoint.Address}: {receivedMessage}\n";
 #endif
                     _handler?.Handle(_udpListener, receivedMessage);
                 }
