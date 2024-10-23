@@ -23,6 +23,7 @@ namespace UnityMultiPlayer.Game
         [SerializeField]
         private PlayerBehaviour _prefab;
         private PlayerBehaviour _temp;
+        private PlayerBehaviour _destroyIt;
         private Dictionary<int, PlayerBehaviour> _players = new Dictionary<int, PlayerBehaviour>();
 
 
@@ -43,11 +44,14 @@ namespace UnityMultiPlayer.Game
             {
                 _temp = Instantiate(_prefab, _father);
             }
+            if (_destroyIt != null)
+            {
+                Destroy(_destroyIt.gameObject);
+            }
         }
 
         public void HandleMsg(NetworkMsgType type, byte[] msgBytes)
         {
-            Debug.Log($"Game: {type}");
             int index = NetworkReaderController.GetInt(msgBytes, 0);
             switch (type)
             {
@@ -68,7 +72,7 @@ namespace UnityMultiPlayer.Game
                     {
                         if (_players[index] != null)
                         {
-                            Destroy(_players[index].gameObject);
+                            _destroyIt = _players[index];
                         }
                         _players[index] = _temp;
                     }

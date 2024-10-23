@@ -15,17 +15,12 @@ namespace UnityMultiPlayer.Network
 {
     public interface IHandlerUdpMsg
     {
-        void Handle(UdpClient udpListener, byte[] receivedMessage, int length);
+        void HandleUDP(UdpClient udpListener, byte[] receivedMessage, int length);
     }
 
     public class UDPListener : UnitySingleton<UDPListener>
     {
         private IHandlerUdpMsg _handler;
-#if LOG
-        [SerializeField]
-        private TextMeshProUGUI _log;
-        private string _logString;
-#endif
 
         private UdpClient _udpListener;
 
@@ -36,16 +31,6 @@ namespace UnityMultiPlayer.Network
             _udpListener = new UdpClient(TCPListener.UDPPort);
             ThreadController.Instance.StartNewThread(StartListening);
         }
-
-#if LOG
-        private void FixedUpdate()
-        {
-            if (_log != null)
-            {
-                _log.text = _logString;
-            }
-        }
-#endif
 
         private void OnApplicationQuit()
         {
@@ -66,12 +51,7 @@ namespace UnityMultiPlayer.Network
                 {
                     IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, TCPListener.UDPPort);
                     byte[] receivedData = _udpListener.Receive(ref endPoint);
-
-#if LOG
-                    string receivedMessage = Encoding.UTF8.GetString(receivedData);
-                    _logString += $"{endPoint.Address}: {receivedMessage}\n";
-#endif
-                    _handler?.Handle(_udpListener, receivedData, receivedData.Length);
+                    _handler?.HandleUDP(_udpListener, receivedData, receivedData.Length);
                 }
             }
             catch (Exception ex)

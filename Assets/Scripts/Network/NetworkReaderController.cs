@@ -11,7 +11,7 @@ namespace UnityMultiPlayer.Network
 {
     public enum NetworkMsgType
     {
-        movement,
+        Movement,
         PlayerConnected,
         NewPlayer,
     }
@@ -90,7 +90,7 @@ namespace UnityMultiPlayer.Network
         [MenuItem("Dev/" + nameof(NetworkReaderController) + "/" + nameof(LogTypesSize))]
         public static void LogTypesSize()
         {
-            int typeInt = (int)NetworkMsgType.movement;
+            int typeInt = (int)NetworkMsgType.Movement;
             Debug.Log(BitConverter.GetBytes(typeInt).Length);
         }
 #endif

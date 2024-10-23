@@ -15,7 +15,7 @@ using UnityMultiPlayer.Game;
 namespace UnityMultiPlayer.Network
 {
 
-    public class TCPListener : UnitySingleton<TCPListener>, IHandlerMsgReceive, IHandlerUdpMsg
+    public class TCPListener : UnitySingleton<TCPListener>, IHandlerTCPMsg, IHandlerUdpMsg
     {
         public const string ServerIPAddress = "192.168.0.4";
         public const int TCPPort = 5000;
@@ -102,7 +102,7 @@ namespace UnityMultiPlayer.Network
             Debug.Log($"{nameof(TCPListener)} stopped listening.");
         }
 
-        public void Handle(UdpClient udpListener, byte[] receivedMessage, int length)
+        public void HandleUDP(UdpClient udpListener, byte[] receivedMessage, int length)
         {
             for (int i = 0; i < _jogadorList.Count; i++)
             {
@@ -112,13 +112,13 @@ namespace UnityMultiPlayer.Network
                 }
                 catch (Exception e)
                 {
-                    Debug.Log($"{nameof(TCPListener)}.{nameof(Handle)} err at {i}: {e} ");
+                    Debug.Log($"{nameof(TCPListener)}.{nameof(HandleUDP)} err at {i}: {e} ");
 
                 }
             }
         }
 
-        public void HandleMsg(int id, byte[] dados, int length)
+        public void HandleTCP(int id, byte[] dados, int length)
         {
 #if LOG
             _logString += $"{id}: {dados}\n";
@@ -135,7 +135,7 @@ namespace UnityMultiPlayer.Network
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError($"{nameof(TCPListener)}.{nameof(HandleMsg)} err: {e} ");
+                    Debug.LogError($"{nameof(TCPListener)}.{nameof(HandleTCP)} err: {e} ");
                 }
             }
         }

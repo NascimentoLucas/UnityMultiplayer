@@ -13,16 +13,16 @@ using System.Runtime.InteropServices.ComTypes;
 
 namespace UnityMultiPlayer.Network
 {
-    public interface IHandlerMsgReceive
+    public interface IHandlerTCPMsg
     {
-        void HandleMsg(int id, byte[] dados, int length);
+        void HandleTCP(int id, byte[] dados, int length);
     }
 
     public class JogadorTCP
     {
         private TcpClient _cliente;
 
-        private IHandlerMsgReceive _handler;
+        private IHandlerTCPMsg _handler;
         IPEndPoint _endPoint;
 
         public string loginUser;
@@ -30,7 +30,7 @@ namespace UnityMultiPlayer.Network
 
         public int id { get; private set; } = -1;
 
-        public JogadorTCP(int id, TcpClient cliente, IHandlerMsgReceive handler)
+        public JogadorTCP(int id, TcpClient cliente, IHandlerTCPMsg handler)
         {
             this.id = id;
             this._cliente = cliente;
@@ -70,7 +70,7 @@ namespace UnityMultiPlayer.Network
                 {
                     Debug.Log($"{id}: {dados}");
                     int bytesRead = _cliente.GetStream().Read(buffer, 0, buffer.Length);
-                    _handler?.HandleMsg(id, buffer, bytesRead);
+                    _handler?.HandleTCP(id, buffer, bytesRead);
                 }
                 catch (Exception e)
                 {
