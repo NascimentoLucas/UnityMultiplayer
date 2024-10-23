@@ -79,9 +79,7 @@ namespace UnityMultiPlayer.Network
                     try
                     {
                         TcpClient client = _listener.AcceptTcpClient();
-                        _jogadorList.Add(new JogadorTCP(_jogadorList.Count, client, this));
-                        int index = _jogadorList.Count - 1;
-                        _jogadorList[index].TCPEnviarMenssagem(GameController.BytesPlayerConnected(index));
+                        AddPlayer(client);
                     }
                     catch (Exception e)
                     {
@@ -94,6 +92,13 @@ namespace UnityMultiPlayer.Network
             {
                 Debug.Log($"{nameof(TCPListener)} error: {ex.Message}");
             }
+        }
+
+        private void AddPlayer(TcpClient client)
+        {
+            _jogadorList.Add(new JogadorTCP(_jogadorList.Count, client, this));
+            int index = _jogadorList.Count - 1;
+            _jogadorList[index].TCPEnviarMenssagem(GameController.BytesPlayerConnected(index));
         }
 
         public void StopListening()

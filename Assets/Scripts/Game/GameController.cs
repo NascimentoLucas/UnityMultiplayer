@@ -67,16 +67,9 @@ namespace UnityMultiPlayer.Game
                     if (!_players.ContainsKey(index))
                     {
                         _players.Add(index, _temp);
+                        SetupTemp();
+                        _client.SendMsgTCP(BytesToNewPlayer(_players[0].Index));
                     }
-                    else
-                    {
-                        if (_players[index] != null)
-                        {
-                            _destroyIt = _players[index];
-                        }
-                        _players[index] = _temp;
-                    }
-                    SetupTemp();
                     break;
                 default:
                     break;
@@ -100,7 +93,7 @@ namespace UnityMultiPlayer.Game
         {
             List<byte> result = new List<byte>();
             result.AddRange(BitConverter.GetBytes((int)NetworkMsgType.NewPlayer));
-            result.AddRange(BitConverter.GetBytes(index + 1));
+            result.AddRange(BitConverter.GetBytes(index));
             return result.ToArray();
         }
     }

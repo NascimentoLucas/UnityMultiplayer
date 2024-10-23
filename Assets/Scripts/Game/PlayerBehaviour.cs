@@ -12,6 +12,8 @@ namespace UnityMultiPlayer.Game
         private TextMeshProUGUI _title;
         private int _index = -1;
 
+        public int Index { get => _index;  }
+
         private void Update()
         {
             _title.text = _index.ToString();
