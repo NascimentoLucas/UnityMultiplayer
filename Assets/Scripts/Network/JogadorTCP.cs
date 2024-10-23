@@ -67,7 +67,6 @@ namespace UnityMultiPlayer.Network
             {
                 try
                 {
-                    Debug.Log($"{id}: {dados}");
                     int bytesRead = _cliente.GetStream().Read(buffer, 0, buffer.Length);
                     _handler?.HandleTCP(id, buffer, bytesRead);
                 }

@@ -29,7 +29,6 @@ namespace UnityMultiPlayer.Common
         internal void AddLog(byte[] receivedMessage)
         {
             string msg = Encoding.UTF8.GetString(receivedMessage);
-            Debug.Log(msg);
             AddLog(msg);
         }
     }

@@ -1,5 +1,6 @@
 ﻿#if UNITY_EDITOR
 #define LOG
+#define UNITY_SERVER
 #endif
 using System;
 using System.Net.Sockets;

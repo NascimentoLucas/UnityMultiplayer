@@ -10,6 +10,8 @@ public class SplashScreenSceneController : MonoBehaviour
 
     void Start()
     {
+        Screen.sleepTimeout = SleepTimeout.NeverSleep;
+
 #if UNITY_SERVER
         StartCoroutine(LoadSceneAsync(serverScene)); 
 #else
