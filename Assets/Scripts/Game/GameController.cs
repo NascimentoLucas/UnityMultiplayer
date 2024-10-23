@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using UnityEngine;
 using UnityMultiPlayer.Common;
 using UnityMultiPlayer.Network;
@@ -8,7 +9,7 @@ using UnityMultiPlayer.Network;
 namespace UnityMultiPlayer.Game
 {
 
-    public class GameController : MonoBehaviour, INetworkReadHandler
+    public class GameController : MonoBehaviour, INetworkReadHandler, IHandlerUdpMsg
     {
         [Header("Setup")]
         [SerializeField]
@@ -36,6 +37,7 @@ namespace UnityMultiPlayer.Game
         {
             NetworkReaderController.Instance.AddHandler(NetworkMsgType.PlayerConnected, this);
             NetworkReaderController.Instance.AddHandler(NetworkMsgType.NewPlayer, this);
+            _udpListener.SetHandler(this);
         }
 
         private void Update()
@@ -47,6 +49,15 @@ namespace UnityMultiPlayer.Game
             if (_destroyIt != null)
             {
                 Destroy(_destroyIt.gameObject);
+            }
+        }
+
+        private void FixedUpdate()
+        {
+            if (_players.ContainsKey(0))
+            {
+                _players[0].SetTime(DateTime.Now.Second);
+                _client.SendMsgUDP(BytesToTime(_players[0].Index, _players[0].Time));
             }
         }
 
@@ -95,6 +106,33 @@ namespace UnityMultiPlayer.Game
             result.AddRange(BitConverter.GetBytes((int)NetworkMsgType.NewPlayer));
             result.AddRange(BitConverter.GetBytes(index));
             return result.ToArray();
+        }
+
+        internal static byte[] BytesToTime(int index, int time)
+        {
+            List<byte> result = new List<byte>();
+            result.AddRange(BitConverter.GetBytes((int)NetworkMsgType.Time));
+            result.AddRange(BitConverter.GetBytes(index));
+            result.AddRange(BitConverter.GetBytes(time));
+            return result.ToArray();
+        }
+
+        public void HandleUDP(UdpClient udpListener, byte[] receivedMessage, int length)
+        {
+            try
+            {
+                int index = NetworkReaderController.GetInt(receivedMessage, 4);
+                int time = NetworkReaderController.GetInt(receivedMessage, 8);
+
+                if (_players.ContainsKey(index) && _players[0].Index != index)
+                {
+                    _players[index].SetTime(time);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);  
+            }
         }
     }
 

@@ -51,7 +51,6 @@ namespace UnityMultiPlayer.Network
         {
             try
             {
-                Debug.Log($"{id}.UDP Send {dados}; {_endPoint.Address}:{_endPoint.Port}");
                 _udp.Send(dados, dados.Length, _endPoint);
             }
             catch (Exception e)

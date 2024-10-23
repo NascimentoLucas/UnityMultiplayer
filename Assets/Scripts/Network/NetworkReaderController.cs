@@ -14,6 +14,7 @@ namespace UnityMultiPlayer.Network
         Movement,
         PlayerConnected,
         NewPlayer,
+        Time
     }
 
     public interface INetworkReadHandler

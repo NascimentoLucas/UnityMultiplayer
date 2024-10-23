@@ -11,13 +11,15 @@ namespace UnityMultiPlayer.Game
         [SerializeField]
         private TextMeshProUGUI _title;
         private int _index = -1;
+        private int _time = -1;
 
-        public int Index { get => _index;  }
+        public int Index { get => _index; }
+        public int Time { get => _time; }
 
         private void Update()
         {
-            _title.text = _index.ToString();
-            if(_index < 0)
+            _title.text = $"{_index}.{_time}";
+            if (_index < 0)
             {
                 transform.localScale = Vector3.zero;
             }
@@ -32,6 +34,10 @@ namespace UnityMultiPlayer.Game
             _index = index;
         }
 
+        internal void SetTime(int second)
+        {
+            _time = second;
+        }
     }
 
 }

@@ -7,7 +7,7 @@ using UnityMultiPlayer.ThreadManagement;
 namespace UnityMultiPlayer.Common
 {
 
-    public class ClientConnection : MonoBehaviour, IHandlerUdpMsg, IHandlerTCPMsg, INetworkReadHandler
+    public class ClientConnection : MonoBehaviour, IHandlerTCPMsg, INetworkReadHandler
     {
         const string serverIp = TCPListener.ServerIPAddress;
         const int port = TCPListener.TCPPort;
@@ -26,6 +26,7 @@ namespace UnityMultiPlayer.Common
         private string _logString = string.Empty;
         private bool _connected = false;
 
+
         private void ConnectToServer()
         {
             if (_connected) return;
@@ -33,8 +34,6 @@ namespace UnityMultiPlayer.Common
             _connected = true;
             TcpClient client = new TcpClient(serverIp, port);
             _jogadorTCP = new JogadorTCP(-10, client, this);
-            _udp.SetHandler(this);
-
         }
 
         public void TryConnectToServer()
@@ -59,12 +58,6 @@ namespace UnityMultiPlayer.Common
             _jogadorTCP.UDPEnviarMenssagem(_udp.UdpListener, NetworkReaderController.GetMsg(NetworkMsgType.Movement, msg));
         }
 
-        public void HandleUDP(UdpClient udpListener, byte[] receivedMessage, int length)
-        {
-            NetworkReaderController.Instance.HandleMsg(receivedMessage, length);
-            _logUdp.AddLog(receivedMessage);
-        }
-
         public void HandleTCP(int id, byte[] dados, int length)
         {
             NetworkReaderController.Instance.HandleMsg(dados, length);
@@ -80,6 +73,12 @@ namespace UnityMultiPlayer.Common
         public void HandleMsg(NetworkMsgType type, byte[] msgBytes)
         {
             _logTcp.AddLog(msgBytes);
+        }
+
+        internal void SendMsgUDP(byte[] bytes)
+        {
+            if (!_connected || _jogadorTCP == null) return;
+            _jogadorTCP.UDPEnviarMenssagem(_udp.UdpListener, bytes);
         }
     }
 
