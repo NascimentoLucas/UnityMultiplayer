@@ -9,6 +9,7 @@ using UnityMultiPlayer.Network;
 namespace UnityMultiPlayer.Game
 {
 
+
     public class GameController : MonoBehaviour, INetworkReadHandler, IHandlerUdpMsg
     {
         [Header("Setup")]
@@ -16,6 +17,8 @@ namespace UnityMultiPlayer.Game
         private ClientConnection _client;
         [SerializeField]
         private UDPListener _udpListener;
+        [SerializeField]
+        private LoopMessagesController _loop;
 
 
         [Header("Setup")]
@@ -73,13 +76,14 @@ namespace UnityMultiPlayer.Game
 
                     byte[] bytes = BytesToNewPlayer(index);
                     _client.SendMsgTCP(bytes);
+                    _loop.StartLoop();
                     break;
                 case NetworkMsgType.NewPlayer:
                     if (!_players.ContainsKey(index))
                     {
                         _players.Add(index, _temp);
                         SetupTemp();
-                        _client.SendMsgTCP(BytesToNewPlayer(_players[0].Index));
+                        SendMyInfo();
                     }
                     break;
                 default:
@@ -131,8 +135,13 @@ namespace UnityMultiPlayer.Game
             }
             catch (Exception e)
             {
-                Debug.LogError(e);  
+                Debug.LogError(e);
             }
+        }
+
+        public void SendMyInfo()
+        {
+            _client.SendMsgTCP(BytesToNewPlayer(_players[0].Index));
         }
     }
 

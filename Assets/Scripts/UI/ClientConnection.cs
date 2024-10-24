@@ -12,7 +12,7 @@ namespace UnityMultiPlayer.Common
     public class ClientConnection : MonoBehaviour, IHandlerTCPMsg, INetworkReadHandler
     {
         const int port = TCPListener.TCPPort;
-        private const string Key = "KeyLastIpAddress";
+        private const string Key = "KeyIpAddress";
         [Header("Setup")]
         [SerializeField]
         private UDPListener _udp;
@@ -36,7 +36,7 @@ namespace UnityMultiPlayer.Common
         private void Start()
         {
             _connectionInfo.text = GetLocalIPAddress();
-            _ipAddress.text = PlayerPrefs.GetString(Key, "192.168.0.4");
+            _ipAddress.text = PlayerPrefs.GetString(Key, "192.168.0.29");
         }
 
         private string GetLocalIPAddress()
@@ -47,7 +47,6 @@ namespace UnityMultiPlayer.Common
                 var host = Dns.GetHostEntry(Dns.GetHostName());
                 foreach (var ip in host.AddressList)
                 {
-                    // Check for IPv4 address
                     if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                     {
                         localIP = ip.ToString();

@@ -43,7 +43,7 @@ namespace UnityMultiPlayer.Network
 
         public void TCPEnviarMenssagem(byte[] dados)
         {
-            Debug.Log($"{id}.TCP Send {dados.Length}");
+            Debug.Log($"{DateTime.Now.ToString("HH:mm:ss")} => {id}: {dados.Length}");
             _cliente.GetStream().Write(dados, 0, dados.Length);
         }
 
@@ -62,7 +62,7 @@ namespace UnityMultiPlayer.Network
         public void Run()
         {
             Debug.Log($"Start id:{id}.listener");
-            byte[] buffer = new byte[1024]; // Create a buffer to hold the bytes
+            byte[] buffer = new byte[1024];
             do
             {
                 try
