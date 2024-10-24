@@ -23,27 +23,25 @@ namespace UnityMultiPlayer.Network
         private TcpClient _cliente;
 
         private IHandlerTCPMsg _handler;
-        IPEndPoint _endPoint;
-
-        public string loginUser;
+        private IPEndPoint _endPoint;
         public string dados;
 
-        public int id { get; private set; } = -1;
+        public int Id { get; private set; } = -1;
 
         public JogadorTCP(int id, TcpClient cliente, IHandlerTCPMsg handler)
         {
-            this.id = id;
+            this.Id = id;
             this._cliente = cliente;
             this._handler = handler;
 
             _endPoint = _cliente.Client.RemoteEndPoint as IPEndPoint;
-            _endPoint.Port = TCPListener.UDPPort;
+            _endPoint.Port = ServerController.UDPPort;
             ThreadController.Instance.StartNewThread(Run);
         }
 
         public void TCPEnviarMenssagem(byte[] dados)
         {
-            Debug.Log($"{DateTime.Now.ToString("HH:mm:ss")} => {id}: {dados.Length}");
+            Debug.Log($"{DateTime.Now.ToString("HH:mm:ss")} => {Id}: {dados.Length}");
             _cliente.GetStream().Write(dados, 0, dados.Length);
         }
 
@@ -61,14 +59,14 @@ namespace UnityMultiPlayer.Network
 
         public void Run()
         {
-            Debug.Log($"Start id:{id}.listener");
+            Debug.Log($"Start id:{Id}.TCP_Read");
             byte[] buffer = new byte[1024];
             do
             {
                 try
                 {
                     int bytesRead = _cliente.GetStream().Read(buffer, 0, buffer.Length);
-                    _handler?.HandleTCP(id, buffer, bytesRead);
+                    _handler?.HandleTCP(Id, buffer, bytesRead);
                 }
                 catch (Exception e)
                 {

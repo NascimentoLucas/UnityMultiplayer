@@ -28,7 +28,7 @@ namespace UnityMultiPlayer.Network
 
         private void Start()
         {
-            _udpListener = new UdpClient(TCPListener.UDPPort);
+            _udpListener = new UdpClient(ServerController.UDPPort);
             ThreadController.Instance.StartNewThread(StartListening);
         }
 
@@ -46,10 +46,10 @@ namespace UnityMultiPlayer.Network
         {
             try
             {
-                Debug.Log($"{nameof(UDPListener)} listening on port {TCPListener.UDPPort}...");
+                Debug.Log($"{nameof(UDPListener)} listening on port {ServerController.UDPPort}...");
                 while (true)
                 {
-                    IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, TCPListener.UDPPort);
+                    IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, ServerController.UDPPort);
                     byte[] receivedData = _udpListener.Receive(ref endPoint);
                     _handler?.HandleUDP(_udpListener, receivedData, receivedData.Length);
                 }

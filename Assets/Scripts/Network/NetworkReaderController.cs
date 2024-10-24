@@ -61,11 +61,6 @@ namespace UnityMultiPlayer.Network
                 throw new ArgumentException($"Already have {type} handler");
         }
 
-        public void Connect()
-        {
-
-        }
-
         public static byte[] GetMsg(NetworkMsgType type, string msg)
         {
             List<byte> bytes = new List<byte>();

@@ -14,7 +14,7 @@ namespace UnityMultiPlayer.Game
     {
         [Header("Setup")]
         [SerializeField]
-        private ClientConnection _client;
+        private ClientController _client;
         [SerializeField]
         private UDPListener _udpListener;
         [SerializeField]
@@ -26,8 +26,7 @@ namespace UnityMultiPlayer.Game
         private Transform _father;
         [SerializeField]
         private PlayerBehaviour _prefab;
-        private PlayerBehaviour _temp;
-        private PlayerBehaviour _destroyIt;
+        private PlayerBehaviour _newPlayer;
         private Dictionary<int, PlayerBehaviour> _players = new Dictionary<int, PlayerBehaviour>();
 
 
@@ -45,13 +44,9 @@ namespace UnityMultiPlayer.Game
 
         private void Update()
         {
-            if (_temp == null)
+            if (_newPlayer == null)
             {
-                _temp = Instantiate(_prefab, _father);
-            }
-            if (_destroyIt != null)
-            {
-                Destroy(_destroyIt.gameObject);
+                _newPlayer = Instantiate(_prefab, _father);
             }
         }
 
@@ -71,7 +66,7 @@ namespace UnityMultiPlayer.Game
             {
                 case NetworkMsgType.PlayerConnected:
                     Debug.Log($"PlayerConnected: {type}.{index}");
-                    _players.Add(0, _temp);
+                    _players.Add(0, _newPlayer);
                     SetupTemp();
 
                     byte[] bytes = BytesToNewPlayer(index);
@@ -81,7 +76,7 @@ namespace UnityMultiPlayer.Game
                 case NetworkMsgType.NewPlayer:
                     if (!_players.ContainsKey(index))
                     {
-                        _players.Add(index, _temp);
+                        _players.Add(index, _newPlayer);
                         SetupTemp();
                         SendMyInfo();
                     }
@@ -91,8 +86,8 @@ namespace UnityMultiPlayer.Game
             }
             void SetupTemp()
             {
-                _temp.Setup(index);
-                _temp = null;
+                _newPlayer.Setup(index);
+                _newPlayer = null;
             }
         }
 

@@ -9,9 +9,8 @@ using UnityMultiPlayer.ThreadManagement;
 namespace UnityMultiPlayer.Common
 {
 
-    public class ClientConnection : MonoBehaviour, IHandlerTCPMsg, INetworkReadHandler
+    public class ClientController : MonoBehaviour, IHandlerTCPMsg, INetworkReadHandler
     {
-        const int port = TCPListener.TCPPort;
         private const string Key = "KeyIpAddress";
         [Header("Setup")]
         [SerializeField]
@@ -47,7 +46,7 @@ namespace UnityMultiPlayer.Common
                 var host = Dns.GetHostEntry(Dns.GetHostName());
                 foreach (var ip in host.AddressList)
                 {
-                    if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    if (ip.AddressFamily == AddressFamily.InterNetwork)
                     {
                         localIP = ip.ToString();
                         break;
@@ -59,7 +58,7 @@ namespace UnityMultiPlayer.Common
                     Debug.LogError("No network adapters with an IPv4 address in the system!");
                 }
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Debug.LogError("Error fetching local IP address: " + ex.Message);
             }
@@ -71,7 +70,7 @@ namespace UnityMultiPlayer.Common
             if (_connected) return;
             NetworkReaderController.Instance.AddHandler(NetworkMsgType.Movement, this);
             _connected = true;
-            TcpClient client = new TcpClient(_ipAddress.text, port);
+            TcpClient client = new TcpClient(_ipAddress.text, ServerController.TCPPort);
             _jogadorTCP = new JogadorTCP(-10, client, this);
         }
 
@@ -86,7 +85,7 @@ namespace UnityMultiPlayer.Common
         {
             if (!_connected || _jogadorTCP == null) return;
 
-            string msg = $"{_jogadorTCP.id}: TCP msg";
+            string msg = $"{_jogadorTCP.Id}: TCP msg";
             SendMsgTCP(NetworkReaderController.GetMsg(NetworkMsgType.Movement, msg));
         }
 
@@ -94,7 +93,7 @@ namespace UnityMultiPlayer.Common
         {
             if (!_connected || _jogadorTCP == null) return;
 
-            string msg = $"{_jogadorTCP.id}: UDP msg";
+            string msg = $"{_jogadorTCP.Id}: UDP msg";
             _jogadorTCP.UDPEnviarMenssagem(_udp.UdpListener, NetworkReaderController.GetMsg(NetworkMsgType.Movement, msg));
         }
 
