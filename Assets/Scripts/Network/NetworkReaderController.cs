@@ -67,7 +67,7 @@ namespace UnityMultiPlayer.Network
 
             int typeInt = (int)type;
             bytes.AddRange(BitConverter.GetBytes(typeInt));
-            bytes.AddRange(Encoding.UTF8.GetBytes(msg));
+            bytes.AddRange(Encoding.ASCII.GetBytes(msg));
 
 
             return bytes.ToArray();
@@ -88,6 +88,8 @@ namespace UnityMultiPlayer.Network
         {
             int typeInt = (int)NetworkMsgType.Movement;
             Debug.Log(BitConverter.GetBytes(typeInt).Length);
+            string msg = $"{1}: TCP msg";
+            Debug.Log(NetworkReaderController.GetMsg(NetworkMsgType.Movement, msg).Length);
         }
 #endif
     }

@@ -10,6 +10,7 @@ using UnityMultiPlayer.Common;
 using UnityMultiPlayer.ThreadManagement;
 using TMPro;
 using UnityMultiPlayer.Game;
+using static UnityEditor.PlayerSettings;
 
 
 namespace UnityMultiPlayer.Network
@@ -95,6 +96,7 @@ namespace UnityMultiPlayer.Network
             {
                 try
                 {
+                    _logString += $"{receivedMessage.Length}\n";
                     _jogadorList[i].UDPEnviarMenssagem(udpListener, receivedMessage);
                 }
                 catch (Exception e)
@@ -107,7 +109,7 @@ namespace UnityMultiPlayer.Network
 
         public void HandleTCP(int id, byte[] dados, int length)
         {
-            _logString += $"{id}: {dados}\n";
+            _logString += $"{id}: {dados.Length}\n";
 
             for (int i = 0; i < _jogadorList.Count; i++)
             {

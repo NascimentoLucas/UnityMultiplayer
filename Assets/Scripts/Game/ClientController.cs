@@ -15,10 +15,6 @@ namespace UnityMultiPlayer.Common
         [Header("Setup")]
         [SerializeField]
         private UDPListener _udp;
-        [SerializeField]
-        private LogHandler _logTcp;
-        [SerializeField]
-        private LogHandler _logUdp;
 
         [Header("Setup.Text")]
         [SerializeField]
@@ -85,7 +81,7 @@ namespace UnityMultiPlayer.Common
         {
             if (!_connected || _jogadorTCP == null) return;
 
-            string msg = $"{_jogadorTCP.Id}: TCP msg";
+            string msg = $"{_jogadorTCP.Id}.TCP";
             SendMsgTCP(NetworkReaderController.GetMsg(NetworkMsgType.Movement, msg));
         }
 
@@ -93,14 +89,13 @@ namespace UnityMultiPlayer.Common
         {
             if (!_connected || _jogadorTCP == null) return;
 
-            string msg = $"{_jogadorTCP.Id}: UDP msg";
+            string msg = $"{_jogadorTCP.Id}.UDP";
             _jogadorTCP.UDPEnviarMenssagem(_udp.UdpListener, NetworkReaderController.GetMsg(NetworkMsgType.Movement, msg));
         }
 
         public void HandleTCP(int id, byte[] dados, int length)
         {
             NetworkReaderController.Instance.HandleMsg(dados, length);
-            _logTcp.AddLog(dados);
         }
 
         internal void SendMsgTCP(byte[] bytes)
@@ -111,7 +106,7 @@ namespace UnityMultiPlayer.Common
 
         public void HandleMsg(NetworkMsgType type, byte[] msgBytes)
         {
-            _logTcp.AddLog(msgBytes);
+            Debug.Log($"{type}:{msgBytes.Length}");
         }
 
         internal void SendMsgUDP(byte[] bytes)
