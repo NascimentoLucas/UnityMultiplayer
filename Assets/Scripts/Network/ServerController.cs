@@ -81,6 +81,7 @@ namespace UnityMultiPlayer.Network
             _jogadorList.Add(new JogadorTCP(_jogadorList.Count, client, this));
             int index = _jogadorList.Count - 1;
             _jogadorList[index].TCPEnviarMenssagem(GameController.BytesPlayerConnected(index));
+            _logString += $"Jogador {index} entrou.\n";
         }
 
         public void StopListening()
