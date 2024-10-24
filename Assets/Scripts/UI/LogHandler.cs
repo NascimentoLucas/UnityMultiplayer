@@ -29,7 +29,7 @@ namespace UnityMultiPlayer.Common
         internal void AddLog(byte[] receivedMessage)
         {
             string msg = Encoding.UTF8.GetString(receivedMessage);
-            AddLog(msg);
+            AddLog(msg.Substring(0, msg.Length - 1));
         }
     }
 
