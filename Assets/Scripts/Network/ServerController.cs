@@ -10,7 +10,6 @@ using UnityMultiPlayer.Common;
 using UnityMultiPlayer.ThreadManagement;
 using TMPro;
 using UnityMultiPlayer.Game;
-using static UnityEditor.PlayerSettings;
 
 
 namespace UnityMultiPlayer.Network
